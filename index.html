@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resumo Amador</title>
+<style>
+  :root{
+    --bg: #0d1721;
+    --bg-panel: #12202e;
+    --grid-line: rgba(120,170,200,0.09);
+    --ink: #dce8ef;
+    --ink-dim: #8fa6b5;
+    --ink-faint: #7d97a8;
+    --accent: #e08a3c;
+    --accent-dim: #b56e2c;
+    --cyan: #5fb8c9;
+    --rule: rgba(120,170,200,0.18);
+    --mono: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, "Liberation Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  h1,h2,h3{text-wrap:balance;}
+  a:focus-visible, button:focus-visible{outline:2px solid var(--cyan); outline-offset:2px; border-radius:2px;}
+  body{
+    background-color:var(--bg);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 28px 28px;
+    color:var(--ink);
+    font-family:var(--sans);
+    line-height:1.6;
+    padding: 0 0 80px 0;
+  }
+  header.hero{padding:64px 24px 40px; max-width:840px; margin:0 auto; border-bottom:1px solid var(--rule);}
+  .coord-label{font-family:var(--mono); font-size:12px; letter-spacing:0.12em; color:var(--cyan); text-transform:uppercase; margin:0 0 18px;}
+  h1{font-weight:700; font-size:clamp(30px, 5vw, 42px); line-height:1.1; letter-spacing:-0.01em; margin:0 0 14px; color:#f2f6f8;}
+  .lede{color:var(--ink-dim); font-size:16.5px; max-width:62ch; margin:0 0 8px;}
+
+  /* Sumário — estilo índice de livro */
+  .sumario{margin-top:32px; border:1px solid var(--rule); border-radius:4px; background:var(--bg-panel); overflow:hidden;}
+  .sumario a{
+    display:flex; justify-content:space-between; align-items:baseline; gap:12px;
+    padding:12px 16px; text-decoration:none; border-bottom:1px solid var(--rule);
+    color:var(--ink); font-size:14px; transition:background .15s;
+  }
+  .sumario a:last-child{border-bottom:none;}
+  .sumario a:hover{background:rgba(224,138,60,0.06);}
+  .sumario .cap-num{font-family:var(--mono); color:var(--accent); font-size:12.5px; margin-right:10px;}
+  .sumario .cap-desc{font-size:12px; color:var(--ink-faint); font-family:var(--mono); white-space:nowrap;}
+
+  .sumario-row{display:flex; align-items:stretch; border-bottom:1px solid var(--rule);}
+  .sumario-row a{flex:1; border-bottom:none;}
+  .sumario-chev{
+    display:flex; align-items:center; gap:6px; justify-content:center;
+    background:rgba(224,138,60,0.08); border:none; border-left:1px solid var(--rule); color:var(--accent);
+    width:96px; cursor:pointer; font-family:var(--mono); font-size:11px; letter-spacing:0.04em; text-transform:uppercase;
+    transition:background .15s, color .15s;
+  }
+  .sumario-chev:hover{background:rgba(224,138,60,0.16); color:#f2b878;}
+  .sumario-chev .chev{display:inline-block; font-size:13px; transition:transform .2s;}
+  .sumario-chev.open .chev{transform:rotate(90deg);}
+  .sumario-chev .chev-label{display:none;}
+  @media (min-width: 480px){ .sumario-chev .chev-label{display:inline;} }
+  .sumario-sublist{display:grid; grid-template-rows:0fr; transition:grid-template-rows .25s ease; background:rgba(0,0,0,0.15);}
+  .sumario-sublist.open{grid-template-rows:1fr;}
+  .sumario-sublist-inner{overflow:hidden; min-height:0;}
+  .sumario-sublist a.sumario-sub-link{
+    display:block; padding:9px 16px 9px 40px; font-size:12.5px; color:var(--ink-dim);
+    text-decoration:none; border-bottom:1px solid var(--rule); font-family:var(--mono);
+    transition:background .15s, color .15s;
+  }
+  .sumario-sublist a.sumario-sub-link:last-child{border-bottom:none;}
+  .sumario-sublist a.sumario-sub-link:hover{background:rgba(224,138,60,0.06); color:var(--accent);}
+
+  section.block{max-width:840px; margin:0 auto; padding:52px 24px; border-bottom:1px solid var(--rule); scroll-margin-top:20px;}
+  section.block:last-of-type{border-bottom:none;}
+  .block-head{display:flex; align-items:baseline; gap:16px; margin-bottom:6px;}
+  .station-num{
+    font-family:var(--mono); font-size:13px; color:var(--accent);
+    border:1px solid var(--accent-dim); padding:2px 8px; border-radius:2px; flex-shrink:0;
+  }
+  h2{font-size:23px; margin:0; color:#f2f6f8; font-weight:700;}
+  .block-tag{font-family:var(--mono); font-size:11.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.08em; margin:2px 0 20px 46px;}
+  .block-desc{color:var(--ink-dim); font-size:15px; margin:0 0 24px; max-width:64ch;}
+  .skill-subhead{
+    font-size:19px; font-weight:700; color:#f2f6f8; margin:0 0 4px;
+    padding-bottom:10px; border-bottom:1px solid var(--rule);
+  }
+  h3.subhead, h4.subhead{
+    font-family:var(--mono); font-size:11.5px; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--cyan); margin:26px 0 12px; display:flex; align-items:center; gap:10px;
+  }
+  h3.subhead::after, h4.subhead::after{content:""; flex:1; height:1px; background:var(--rule);}
+  .subhead.mt-36{margin-top:36px;}
+  .skill-entry{margin-top:20px; scroll-margin-top:20px;}
+  .skill-entry + .skill-entry{margin-top:52px;}
+  .block-tag.tag-flush{margin-left:0;}
+  .block-desc.mb-10{margin-bottom:10px;}
+  .block-desc.mb-14{margin-bottom:14px;}
+  .block-desc.mb-18{margin-bottom:18px;}
+  .hl, .note .hl{color:var(--ink);}
+  .ex{color:var(--ink-faint);}
+  .xref{color:var(--cyan); text-decoration:none; border-bottom:1px dotted var(--cyan);}
+  .xref:hover{color:var(--accent); border-bottom-color:var(--accent);}
+
+  table.ref-table{width:100%; border-collapse:collapse; margin:0 0 22px; font-size:13.5px;}
+  table.ref-table td, table.ref-table th{padding:10px 10px; border-bottom:1px solid var(--rule); vertical-align:top; color:var(--ink-dim); font-weight:400; text-align:left;}
+  table.ref-table td{max-width:62ch;}
+  table.ref-table th[scope="row"]{width:150px; white-space:nowrap; font-family:var(--mono); font-size:12.5px; color:var(--ink);}
+  table.ref-table tr.group-row th{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--cyan); border-bottom:1px solid var(--rule); padding-top:18px; padding-bottom:6px; width:auto; white-space:normal;
+  }
+  table.ref-table tr:first-child.group-row th{padding-top:2px;}
+  table.ref-table code{font-family:var(--mono); font-size:12.5px; color:var(--accent);}
+
+  table.cmd-table{width:100%; border-collapse:collapse; margin:0 0 24px; font-size:14px;}
+  table.cmd-table td, table.cmd-table th{padding:9px 10px; border-bottom:1px solid var(--rule); vertical-align:top; color:var(--ink-dim); font-weight:400; text-align:left;}
+  table.cmd-table td{max-width:62ch;}
+  table.cmd-table th[scope="row"]{width:130px; white-space:nowrap;}
+  table.cmd-table code{font-family:var(--mono); font-size:13px; color:var(--accent);}
+  table.cmd-table tr.group-row th{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--cyan); border-bottom:1px solid var(--rule); padding-top:20px; padding-bottom:6px; width:auto; white-space:normal;
+  }
+  table.cmd-table tr:first-child.group-row th{padding-top:4px;}
+  tr.hot th, tr.hot td{background:rgba(95,184,201,0.05);}
+
+  .codeblock{position:relative; background:#0a141d; border:1px solid var(--rule); border-radius:4px; margin:0 0 16px; overflow:hidden;}
+  .codeblock .label{font-family:var(--mono); font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-faint); padding:8px 14px 0; display:block;}
+  .codeblock pre{margin:0; padding:6px 14px 14px; overflow-x:auto;}
+  .codeblock code{font-family:var(--mono); font-size:13.5px; color:#c8e8d8; white-space:pre;}
+  .copy-btn{
+    position:absolute; top:8px; right:10px; font-family:var(--mono); font-size:11px;
+    color:var(--ink-dim); background:var(--bg-panel); border:1px solid var(--rule); border-radius:3px;
+    padding:5px 10px; cursor:pointer; transition:border-color .15s, color .15s;
+  }
+  .copy-btn:hover{border-color:var(--accent); color:var(--accent);}
+  .copy-btn.copied{border-color:#5fb87e; color:#5fb87e;}
+
+  ol.steps{margin:0 0 20px; padding-left:22px; color:var(--ink-dim); font-size:14.5px;}
+  ol.steps li{margin-bottom:8px;}
+  ol.steps li strong{color:var(--ink);}
+
+  .flow-step{display:flex; gap:16px; margin:0 0 22px; padding-bottom:22px; border-bottom:1px dashed var(--rule);}
+  .flow-step:last-child{border-bottom:none; margin-bottom:0; padding-bottom:0;}
+  .flow-num{
+    font-family:var(--mono); font-size:13px; color:var(--bg); background:var(--cyan);
+    width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; margin-top:2px;
+  }
+  .flow-body h4{margin:0 0 6px; font-size:15.5px; color:#f2f6f8; font-weight:700;}
+  .flow-body p{margin:0 0 8px; color:var(--ink-dim); font-size:14px;}
+  .flow-tools{display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;}
+  .flow-tools span{
+    font-family:var(--mono); font-size:11px; color:var(--cyan); border:1px solid rgba(95,184,201,0.3);
+    padding:3px 8px; border-radius:2px; background:rgba(95,184,201,0.06);
+  }
+
+  .note{font-size:13.5px; color:var(--ink-faint); border-left:2px solid var(--accent-dim); padding:8px 0 8px 14px; margin:16px 0;}
+  .note strong{color:var(--accent);}
+  .note.danger{border-left-color:#d4645a;}
+  .note.danger strong{color:#d4645a;}
+
+  .source-link{margin:20px 0 0; font-size:12.5px; font-family:var(--mono);}
+  .source-link a{color:var(--cyan); text-decoration:none; border-bottom:1px dotted var(--cyan);}
+  .source-link a:hover{color:var(--accent); border-bottom-color:var(--accent);}
+
+  dl.glossary{margin:0;}
+  dl.glossary dt{font-family:var(--mono); font-size:13.5px; color:var(--accent); margin-top:16px;}
+  dl.glossary dd{margin:4px 0 0; color:var(--ink-dim); font-size:14px; max-width:60ch;}
+
+  footer{max-width:840px; margin:0 auto; padding:48px 24px 0; color:var(--ink-faint); font-size:12.5px; font-family:var(--mono);}
+
+  ul.check-list{list-style:none; margin:0 0 22px; padding:0;}
+  ul.check-list li{display:flex; gap:14px; padding:16px 0; border-bottom:1px dashed var(--rule);}
+  ul.check-list li:last-child{border-bottom:none;}
+  .check-mark{
+    font-family:var(--mono); font-size:12px; color:var(--accent);
+    border:1px solid var(--accent-dim); border-radius:2px;
+    width:24px; height:24px; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; margin-top:2px;
+  }
+  .check-body strong{color:var(--ink); display:block; margin-bottom:2px; font-size:14px;}
+  .check-body p{margin:0; color:var(--ink-dim); font-size:13.5px; max-width:62ch;}
+  .check-body code{font-family:var(--mono); font-size:12.5px; color:var(--accent);}
+
+  .back-top{
+    position:fixed; right:18px; bottom:18px; z-index:10;
+    font-family:var(--mono); font-size:11.5px; color:var(--cyan);
+    background:var(--bg-panel); border:1px solid var(--rule); border-radius:3px;
+    padding:8px 12px; text-decoration:none;
+    opacity:0; pointer-events:none; transition:opacity .2s, border-color .15s, color .15s;
+  }
+  .back-top.visible{opacity:1; pointer-events:auto;}
+  .back-top:hover{border-color:var(--accent); color:var(--accent);}
+
+  @media (max-width: 600px){
+    header.hero{padding:44px 20px 32px;}
+    section.block{padding:40px 20px;}
+    .block-tag{margin-left:0;}
+    .sumario a{flex-direction:column; align-items:flex-start; gap:2px;}
+    .sumario .cap-desc{white-space:normal;}
+
+    table.ref-table, table.cmd-table,
+    table.ref-table tbody, table.cmd-table tbody{display:block; width:100%;}
+    table.ref-table tr, table.cmd-table tr{display:block; padding:10px 0; border-bottom:1px solid var(--rule);}
+    table.ref-table th, table.ref-table td,
+    table.cmd-table th, table.cmd-table td{
+      display:block; width:auto; max-width:none; white-space:normal;
+      border-bottom:none; padding:0 0 4px;
+    }
+    table.ref-table th[scope="row"], table.cmd-table th[scope="row"]{width:auto; white-space:normal;}
+    table.ref-table tr.group-row, table.cmd-table tr.group-row{border-bottom:none; padding-bottom:0;}
+    table.ref-table tr.group-row th, table.cmd-table tr.group-row th{padding-bottom:0;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *, *::before, *::after{transition:none !important; animation:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<noscript><style>.copy-btn, .sumario-chev{display:none;} .sumario-sublist{grid-template-rows:1fr;} .back-top{opacity:1; pointer-events:auto;}</style></noscript>
+
+<header class="hero">
+  <p class="coord-label">Apostila · Claude · atualizado em julho de 2026</p>
+  <h1>Resumo Amador</h1>
+  <p class="lede">Como a plataforma, a metodologia, os comandos e as skills se encaixam como um sistema único — não recursos isolados. Do primeiro rascunho de ideia até a manutenção de longo prazo, com profundidade real em cada etapa.</p>
+
+  <nav class="sumario" id="sumario" aria-label="Sumário">
+<a href="#plataforma"><span><span class="cap-num">01</span>A plataforma</span><span class="cap-desc">Home, Code e os 5 recursos ao redor</span></a>
+<a href="#metodologia"><span><span class="cap-num">02</span>Metodologia</span><span class="cap-desc">Superpowers de ponta a ponta</span></a>
+<a href="#loops"><span><span class="cap-num">03</span>Arquitetura de loops</span><span class="cap-desc">/goal, /loop, /batch</span></a>
+<a href="#comandos"><span><span class="cap-num">04</span>Comandos úteis</span><span class="cap-desc">/clear, /compact e mais</span></a>
+<a href="#fluxo"><span><span class="cap-num">05</span>Fluxo completo</span><span class="cap-desc">Ideia até manutenção</span></a>
+<div class="sumario-group">
+      <div class="sumario-row">
+        <a href="#skills"><span><span class="cap-num">06</span>Skills</span><span class="cap-desc">Instalação e uso completos</span></a>
+        <button type="button" class="sumario-chev" data-target="sumario-skills-list" aria-expanded="false" aria-controls="sumario-skills-list" aria-label="Expandir lista de skills"><span class="chev-label">Ver skills</span><span class="chev">▸</span></button>
+      </div>
+      <div class="sumario-sublist" id="sumario-skills-list"><div class="sumario-sublist-inner"><a href="#skill-impeccable" class="sumario-sub-link">Impeccable</a><a href="#skill-superpowers" class="sumario-sub-link">Superpowers</a><a href="#skill-find-skills" class="sumario-sub-link">find-skills</a><a href="#skill-task-observer" class="sumario-sub-link">Task Observer</a><a href="#skill-caveman" class="sumario-sub-link">Caveman</a><a href="#skill-claude-mem" class="sumario-sub-link">claude-mem</a><a href="#skill-humanizer" class="sumario-sub-link">Humanizer</a></div></div>
+    </div>
+<a href="#watchlist"><span><span class="cap-num">07</span>Lista de observação</span><span class="cap-desc">Avaliadas, não instaladas</span></a>
+<a href="#seguranca"><span><span class="cap-num">08</span>Segurança</span><span class="cap-desc">Checklist consolidado</span></a>
+<a href="#glossario"><span><span class="cap-num">09</span>Glossário</span><span class="cap-desc">Termos usados na apostila</span></a>
+<a href="#comecar"><span><span class="cap-num">10</span>Por onde começar</span><span class="cap-desc">Primeiros passos práticos</span></a>
+</nav>
+</header>
+
+<section class="block" id="plataforma">
+  <div class="block-head"><span class="station-num">01</span><h2>A plataforma</h2></div>
+  <p class="block-tag">O que cada aba realmente faz</p>
+  <p class="block-desc">A interface se divide em duas camadas: onde você <em>pensa</em> (Home) e onde você <em>constrói de verdade</em> (Code). Em volta disso, cinco recursos cobrem organização, execução autônoma e continuidade — a maioria das pessoas usa só o chat e nunca toca nos outros seis.</p>
+
+  <table class="ref-table">
+    <tbody>
+      <tr class="group-row"><th colspan="2" scope="colgroup">Núcleo</th></tr>
+      <tr><th scope="row">Home</th><td>Chat e Cowork combinados — onde você refina ideia, delega tarefa de conhecimento (pesquisa, documento, planilha) e itera rápido sem compromisso de arquivo.</td></tr>
+      <tr><th scope="row">Code</th><td>Ambiente de programação real — terminal, sistema de arquivos, git, testes. É onde a ideia madura vira produto de verdade.</td></tr>
+
+      <tr class="group-row"><th colspan="2" scope="colgroup">Organização e continuidade</th></tr>
+      <tr><th scope="row">Projects</th><td>Espaço persistente por tema/cliente — agrupa conversas com arquivos e instruções fixas, sem reexplicar contexto toda vez.</td></tr>
+      <tr><th scope="row">Artifacts</th><td>Onde ficam os documentos/apps visuais publicados — histórico navegável, pronto pra compartilhar link.</td></tr>
+      <tr><th scope="row">Customize</th><td>Diretório único de Skills, Connectors e Plugins — onde você instala e gerencia tudo que estende o Claude no chat e no Cowork.</td></tr>
+
+      <tr class="group-row"><th colspan="2" scope="colgroup">Execução autônoma</th></tr>
+      <tr><th scope="row">Scheduled</th><td>Tarefas recorrentes. Rodam na nuvem (mesmo com PC desligado) se não usarem pasta local; rodam localmente (PC precisa estar ligado) se apontarem pra uma pasta no seu computador.</td></tr>
+      <tr><th scope="row">Dispatch</th><td>Controle remoto do computador a partir do celular — usa arquivos locais, conectores e, com Computer Use, opera aplicativos abertos de verdade. Precisa do computador ligado.</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="subhead">Cada item, em profundidade</h3>
+
+  <p class="block-desc"><strong class="hl">Home.</strong> É o ponto de entrada padrão — pesquisa, redação, análise, brainstorming. Também é onde o Cowork entra: você pode pedir uma tarefa mais longa ("levanta os pontos-chave desses 4 documentos e monta um resumo comparativo") e o Claude executa em segundo plano enquanto você continua conversando ou até fecha a aba.<br>
+  <em class="ex">Exemplo genérico:</em> pedir uma análise comparativa de três fornecedores a partir de propostas em PDF, sem precisar abrir cada arquivo manualmente.</p>
+
+  <p class="block-desc"><strong class="hl">Code.</strong> Não é só "onde o código roda" — é onde o Claude tem acesso real ao sistema de arquivos: lê, edita, executa comandos, roda testes, versiona com git. A diferença central pra Home é que aqui existe estado persistente em disco, não só na conversa.<br>
+  <em class="ex">Exemplo genérico:</em> construir uma ferramenta interna que processa uma planilha toda semana e gera um relatório automaticamente.</p>
+
+  <p class="block-desc"><strong class="hl">Projects.</strong> Resolve o problema de "reexplicar tudo de novo" — você fixa instruções (até ~8.000 caracteres, bem mais espaço que a instrução de perfil geral) e uma base de arquivos de referência (até 20 arquivos, 30MB cada, nos planos pagos), e toda conversa nova dentro daquele projeto já nasce com esse contexto carregado.<br>
+  <em class="ex">Detalhe que pega muita gente:</em> conversas dentro do mesmo projeto <strong class="hl">não compartilham histórico entre si</strong> — só a base de arquivos é compartilhada. Cada conversa nova começa do zero na parte de diálogo, só herdando instrução e arquivos.<br>
+  <em class="ex">Exemplo genérico:</em> um projeto por cliente ou por contrato, com escopo, glossário de termos e exemplos de output anteriores upados — qualidade da base de arquivos importa mais que quantidade.</p>
+
+  <p class="block-desc"><strong class="hl">Artifacts.</strong> Ao criar um novo, o Claude mostra 7 categorias de ponto de partida — cada uma direciona o tipo de resultado que ele prioriza, melhorando a qualidade da primeira tentativa:</p>
+
+  <table class="ref-table">
+    <tbody>
+      <tr><th scope="row">Apps and websites</th><td>Aplicações interativas com estado (formulário, calculadora, painel funcional).</td></tr>
+      <tr><th scope="row">Documents and templates</th><td>Texto longo estruturado — proposta, relatório, modelo reutilizável.</td></tr>
+      <tr><th scope="row">Games</th><td>Loops baseados em Canvas — mais lúdico, mas útil pra treinamento gamificado.</td></tr>
+      <tr><th scope="row">Productivity tools</th><td>Dashboards e rastreadores — orçamento, cronograma, controle de progresso.</td></tr>
+      <tr><th scope="row">Creative projects</th><td>Conteúdo visual — infográfico, diagrama, conceito ilustrado.</td></tr>
+      <tr><th scope="row">Quiz or survey</th><td>Fluxo estruturado de pergunta e resposta, com pontuação — avaliação, formulário de admissão.</td></tr>
+      <tr><th scope="row">Start from scratch</th><td>Sem viés — o resultado depende inteiramente do quanto seu prompt for explícito sobre o formato.</td></tr>
+    </tbody>
+  </table>
+
+  <p class="block-desc">O painel do artifact tem duas abas: <strong class="hl">Preview</strong> (roda ao vivo) e <strong class="hl">Code</strong> (mostra o código-fonte completo). Publicar gera um link público, atualizável sem trocar a URL.<br>
+  <em class="ex">Limitações reais:</em> o Preview roda JavaScript de navegador, não um servidor — não dá pra chamar a maioria das APIs externas de dentro dele. "Baixar como HTML" entrega o código-fonte bruto do Claude, não um arquivo otimizado pra produção.<br>
+  <em class="ex">Exemplo genérico:</em> publicar uma calculadora de orçamento simples pra um colega reutilizar, sem precisar instalar nada.</p>
+
+  <p class="note"><strong>Existem dois "Artifacts" diferentes:</strong> o clássico, criado em Home, é público assim que publicado (qualquer pessoa com o link acessa, sem login). O do Claude Code, criado dentro de uma sessão de código, é <strong class="hl">privado por padrão</strong> — só o criador acessa, a menos que compartilhe manualmente dentro da organização. São mecanismos parecidos, mas com regra de visibilidade oposta por padrão — vale conferir qual dos dois você está usando antes de assumir que algo é público ou privado.</p>
+
+  <p class="block-desc"><strong class="hl">Customize.</strong> É o diretório único de 3 abas — Skills, Connectors e Plugins — de onde você estende o Claude no chat e no Cowork:</p>
+
+  <table class="ref-table">
+    <tbody>
+      <tr><th scope="row">Skills</th><td>Arquivos de instrução reutilizável. Claude lê só o nome/descrição de cada skill até uma bater com sua tarefa, depois carrega o resto — por isso ter dezenas instaladas não pesa no contexto.</td></tr>
+      <tr><th scope="row">Connectors</th><td>Ligação via MCP com serviço externo (Google Drive, Gmail, Slack etc.). É a "tomada" que dá ao Claude acesso a dado real fora da conversa.</td></tr>
+      <tr><th scope="row">Plugins</th><td>Empacota skills + connectors + comandos + subagentes num pacote só, instalado de uma vez.</td></tr>
+    </tbody>
+  </table>
+
+  <p class="note"><strong>Não confunda com as skills do Claude Code:</strong> as 7 skills que você instalou via terminal (Impeccable, Superpowers etc.) vivem num sistema separado, específico do Claude Code — instalado por linha de comando, não por aqui. O Customize > Skills do chat/Cowork é outro diretório, com sua própria lista (por padrão só vem com <code>skill-creator</code>, da própria Anthropic). Os dois coexistem, mas não se misturam automaticamente.</p>
+
+  <p class="note"><strong>Onde fica o tom/instrução (não é aqui):</strong> personalização de tom não mora no Customize — fica em dois lugares diferentes: instrução de perfil em Settings, e Style por conversa no menu "+" da caixa de mensagem. Veja a tabela abaixo.</p>
+
+  <h3 class="subhead">Personalização de tom — separada do Customize</h3>
+  <p class="block-desc">São 3 camadas que se empilham, em lugares diferentes da interface:</p>
+
+  <table class="ref-table">
+    <tbody>
+      <tr><th scope="row">Instruções de perfil</th><td>Settings → General/Account. Vale em toda conversa, de qualquer projeto (limite ~1.500 caracteres). "Quem eu sou, como eu trabalho."</td></tr>
+      <tr><th scope="row">Styles</th><td>Menu "+" da caixa de mensagem, em qualquer conversa. Tom por conversa — presets prontos (Normal, Learning, Concise, Explanatory, Formal) ou um estilo próprio, criado a partir de um exemplo de escrita sua.</td></tr>
+      <tr><th scope="row">Instruções de projeto</th><td>Dentro de cada Project. Vale só ali (limite ~8.000 caracteres) — mais espaço pra contexto de domínio.</td></tr>
+    </tbody>
+  </table>
+
+  <p class="block-desc">As três rodam juntas em cada resposta — instrução de projeto + instrução de perfil + style escolhido, empilhadas. Regra prática: perfil pra identidade e tom permanente, projeto pra conhecimento de domínio, style pra ajuste pontual de uma conversa específica.<br>
+  <em class="ex">Exemplo genérico:</em> instrução de perfil fixando tom direto e sem rodeio; instrução de projeto com o glossário técnico de um cliente específico; style "Formal" ligado só na conversa em que você está redigindo algo pra enviar externamente.</p>
+
+  <p class="block-desc"><strong class="hl">Scheduled.</strong> Transforma um pedido pontual em rotina. Você descreve a tarefa e a frequência uma única vez; a partir daí ela roda sozinha.<br>
+  <em class="ex">O detalhe que muda tudo:</em> ao criar a tarefa, existe um campo de pasta. Deixe vazio (ou aponte pra um Project) e ela roda na nuvem, sobrevivendo ao PC desligado. Aponte pra uma pasta local do seu computador e ela passa a rodar só localmente — mesma restrição do Dispatch, precisa do PC ligado e acordado.<br>
+  <em class="ex">Exemplo genérico:</em> um resumo de e-mail/calendário toda manhã roda liso na nuvem; uma tarefa que organiza arquivos numa pasta específica do computador exige o PC ligado, porque precisa tocar nesses arquivos de verdade.</p>
+  <p class="block-desc"><strong class="hl">Dispatch.</strong> É a ponte entre celular e computador — você manda uma instrução de qualquer lugar, e ela é executada no seu computador local, usando os arquivos e programas que já estão lá. Precisa do computador ligado e do app aberto, porque a execução acontece localmente, não na nuvem.<br>
+  <em class="ex">Exemplo genérico:</em> estando fora, pedir pelo celular pra comparar três propostas em PDF salvas no computador — o resultado já está pronto quando você volta a se sentar.</p>
+
+  <h3 class="subhead">Quando usar cada um</h3>
+  <p class="block-desc mb-14">Uma pergunta simples resolve a maior parte das dúvidas: <strong class="hl">o resultado precisa virar arquivo/código que persiste, ou é uma resposta/documento que se resolve numa conversa?</strong> Primeiro caso → Code. Segundo caso → Home.</p>
+
+  <p class="note"><strong>Diferença que importa:</strong> Dispatch é sempre local — por definição, é uma ponte pro seu computador específico. Scheduled pode ser local ou em nuvem, dependendo só de você apontar (ou não) pra uma pasta do computador na hora de criar a tarefa. Se a tarefa não precisa de arquivo local, prefira sempre deixar Scheduled sem pasta — roda mais confiável, sem depender do PC ligado.</p>
+</section>
+
+<section class="block" id="metodologia">
+  <div class="block-head"><span class="station-num">02</span><h2>Metodologia</h2></div>
+  <p class="block-tag">Como o Superpowers substitui o preenchimento manual</p>
+  <p class="block-desc">A maior mudança de postura é parar de escrever prompt detalhado toda vez e passar a confiar num processo que já pergunta, planeja e verifica sozinho.</p>
+
+  <h3 class="subhead">Antes e depois</h3>
+  <table class="ref-table">
+    <tbody>
+      <tr><th scope="row">Sem metodologia</th><td>Você escreve um prompt longo tentando prever tudo, o Claude codifica direto, e só descobre o que faltou quando já está pronto (e errado).</td></tr>
+      <tr><th scope="row">Com Superpowers</th><td>Você descreve a ideia solta. O Claude pergunta o que falta esclarecer, propõe um plano com critério de sucesso verificável, e só codifica depois de você aprovar.</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="subhead">O ciclo completo</h3>
+  <ol class="steps">
+    <li><strong>Entrevista</strong> — a skill de brainstorming pergunta o que precisa ficar claro, com base no que você descreveu.</li>
+    <li><strong>Plano</strong> — a partir das respostas, gera um documento de implementação com critérios de sucesso verificáveis (o que viraria um <code>PROMPT.md</code> se você escrevesse na mão).</li>
+    <li><strong>Execução com TDD</strong> — escreve teste que falha, código mínimo pra passar, depois refatora. Nunca marca algo como pronto sem o teste confirmar.</li>
+    <li><strong>Revisão</strong> — sub-skills dedicadas de code review, tanto pra pedir quanto pra receber revisão estruturada, antes de considerar terminado.</li>
+  </ol>
+
+  <h3 class="subhead">Referência completa — 13 sub-skills</h3>
+  <p class="block-desc mb-18">O ciclo de 4 passos acima é a versão resumida. Por baixo, são 13 sub-skills especializadas — instaladas todas juntas, ativadas conforme a situação pede.</p>
+
+  <table class="cmd-table">
+    <tbody>
+      <tr class="group-row"><th colspan="2" scope="colgroup">Descoberta e planejamento</th></tr>
+      <tr><th scope="row">brainstorming</th><td>Pergunta o que falta esclarecer antes de qualquer código, evitando escopo mal definido.</td></tr>
+      <tr><th scope="row">writing-plans</th><td>Gera o documento de plano de implementação, com critérios de sucesso verificáveis.</td></tr>
+
+      <tr class="group-row"><th colspan="2" scope="colgroup">Execução</th></tr>
+      <tr><th scope="row">executing-plans</th><td>Executa o plano aprovado passo a passo, marcando progresso conforme avança.</td></tr>
+      <tr><th scope="row">subagent-driven-development</th><td>Delega partes do trabalho a subagentes, mantendo a sessão principal limpa.</td></tr>
+      <tr><th scope="row">dispatching-parallel-agents</th><td>Coordena múltiplos agentes trabalhando em paralelo na mesma tarefa.</td></tr>
+      <tr><th scope="row">using-git-worktrees</th><td>Usa worktrees separadas pra rodar trabalho paralelo sem um branch conflitar com outro.</td></tr>
+
+      <tr class="group-row"><th colspan="2" scope="colgroup">Qualidade</th></tr>
+      <tr><th scope="row">test-driven-development</th><td>O ciclo teste falha → código mínimo → passa → refatora.</td></tr>
+      <tr><th scope="row">systematic-debugging</th><td>Investiga um bug de forma estruturada, isolando a causa antes de tentar corrigir — em vez de tentativa e erro.</td></tr>
+      <tr><th scope="row">verification-before-completion</th><td>Confirma o critério de sucesso de fato, contra evidência real, antes de marcar qualquer tarefa como pronta.</td></tr>
+
+      <tr class="group-row"><th colspan="2" scope="colgroup">Revisão</th></tr>
+      <tr><th scope="row">requesting-code-review</th><td>Pede revisão estruturada do próprio trabalho antes de considerar terminado.</td></tr>
+      <tr><th scope="row">receiving-code-review</th><td>Aplica feedback de revisão de forma organizada, sem perder o que já funcionava.</td></tr>
+
+      <tr class="group-row"><th colspan="2" scope="colgroup">Finalização e meta</th></tr>
+      <tr><th scope="row">finishing-a-development-branch</th><td>Fecha uma branch de trabalho — commit final, limpeza, preparação pra merge.</td></tr>
+      <tr><th scope="row">using-superpowers</th><td>Meta-skill que decide quando e como acionar as outras doze, conforme a situação.</td></tr>
+      <tr><th scope="row">writing-skills</th><td>Ajuda a transformar um padrão repetido em skill nova — o par natural do <a class="xref" href="#skill-task-observer">Task Observer (capítulo 06)</a>.</td></tr>
+    </tbody>
+  </table>
+
+  <p class="note"><strong>O ponto central:</strong> você deixou de ser quem escreve especificação técnica e virou quem aprova o plano que o Claude gerou. Isso é o que separa "operador digitando prompt" de "arquiteto revisando decisões".</p>
+</section>
+
+<section class="block" id="loops">
+  <div class="block-head"><span class="station-num">03</span><h2>Arquitetura de loops</h2></div>
+  <p class="block-tag">Deixar de acompanhar prompt a prompt</p>
+  <p class="block-desc">Sessões longas degradam — a qualidade cai depois de muito contexto acumulado (a chamada "zona burra" da comunidade, geralmente depois de 100-150k tokens). Um loop reseta o contexto a cada iteração, mantendo o progresso em arquivos e no histórico do git em vez de na conversa.</p>
+
+  <h3 class="subhead">Os 3 comandos nativos</h3>
+  <table class="cmd-table">
+    <tbody>
+      <tr><th scope="row"><code>/goal</code></th><td>Você dá a condição final; o Claude persegue até um avaliador confirmar que bateu. O mais útil no dia a dia.</td></tr>
+      <tr><th scope="row"><code>/loop</code></th><td>Repete um prompt em intervalo fixo, até você apertar Esc. Bom pra monitoramento.</td></tr>
+      <tr><th scope="row"><code>/batch</code></th><td>Espalha uma mudança mecânica grande em paralelo, com múltiplos agentes em worktrees separados.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="codeblock">
+    <span class="label">Prompt — exemplo de /goal</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>/goal [critério de sucesso verificável, ex: todos os testes passam e o lint está limpo]</code></pre>
+  </div>
+
+  <p class="note"><strong>Conexão com o <a class="xref" href="#metodologia">capítulo 02</a>:</strong> <code>/batch</code> na prática aciona duas sub-skills do Superpowers ao mesmo tempo — <code>using-git-worktrees</code> (isola cada agente numa cópia separada do repositório) e <code>dispatching-parallel-agents</code> (coordena o trabalho entre eles). Você não precisa chamar as duas manualmente; <code>/batch</code> já orquestra isso.</p>
+
+  <h3 class="subhead">O que sustenta o loop por baixo</h3>
+  <p class="block-desc mb-14">Independente do comando, o mecanismo é sempre o mesmo esqueleto de arquivos funcionando como memória externa, já que o contexto da conversa é descartado a cada iteração:</p>
+  <table class="ref-table">
+    <tbody>
+      <tr><th scope="row">Objetivo</th><td>O que precisa existir ao final, com critério de sucesso verificável — não descreve como fazer.</td></tr>
+      <tr><th scope="row">Lista de tarefas</th><td>Passos concretos, cada um só marcado como feito depois do critério confirmado — nunca por "parecer" pronto.</td></tr>
+      <tr><th scope="row">Comandos de build/teste</th><td>O que o agente roda pra validar cada passo — sem isso, ele não tem como verificar nada.</td></tr>
+    </tbody>
+  </table>
+
+  <p class="note danger"><strong>Risco a evitar:</strong> loop bruto via terminal com <code>--dangerously-skip-permissions</code> dá acesso irrestrito de shell — há relatos reais de perda de pasta inteira sem isolamento. Use apenas dentro de ambientes de contêiner confiáveis, nunca direto na pasta principal do projeto.</p>
+</section>
+
+<section class="block" id="comandos">
+  <div class="block-head"><span class="station-num">04</span><h2>Comandos úteis</h2></div>
+  <p class="block-tag">O painel de controle de uma sessão — não só conversa</p>
+  <p class="block-desc">Além dos comandos de loop, existe um conjunto de comandos que controlam o que está acontecendo agora dentro da sessão — gestão de contexto, custo, navegação de histórico e qualidade. Digitar <code>/</code> sozinho mostra tudo que sua instalação atual expõe.</p>
+
+  <table class="cmd-table">
+    <tbody>
+      <tr class="group-row"><th colspan="2" scope="colgroup">Gestão de contexto — o par mais usado no dia a dia</th></tr>
+      <tr class="hot"><th scope="row"><code>/compact</code></th><td>Resume o histórico da conversa, preservando o essencial. Aceita instrução do que reter — use quando o contexto passar de ~80%.</td></tr>
+      <tr class="hot"><th scope="row"><code>/clear</code></th><td>Reset completo — zera todo o histórico. Use ao trocar pra uma tarefa totalmente diferente, não relacionada à anterior.</td></tr>
+      <tr class="hot"><th scope="row"><code>/context</code></th><td>Mostra quanto da janela de contexto está em uso agora — checagem rápida antes de decidir entre compact ou clear.</td></tr>
+
+      <tr class="group-row"><th colspan="2" scope="colgroup">Navegação e histórico</th></tr>
+      <tr><th scope="row"><code>/resume</code></th><td>Retoma uma sessão anterior — sem argumento, mostra um seletor das mais recentes.</td></tr>
+      <tr><th scope="row"><code>/rewind</code></th><td>Reverte trabalho feito — permite escolher entre desfazer só código, só conversa, ou os dois. Atalho: Esc duas vezes.</td></tr>
+      <tr><th scope="row"><code>/fork</code></th><td>Cria uma ramificação separada da sessão pra testar algo arriscado sem comprometer a principal.</td></tr>
+
+      <tr class="group-row"><th colspan="2" scope="colgroup">Custo e performance</th></tr>
+      <tr><th scope="row"><code>/cost</code></th><td>Mostra quanto foi gasto na sessão (contas de API).</td></tr>
+      <tr><th scope="row"><code>/usage</code></th><td>Mostra quanto resta do seu limite de uso (planos Pro/Max).</td></tr>
+      <tr><th scope="row"><code>/model</code></th><td>Troca de modelo no meio da sessão — um modelo mais leve pra exploração, um mais robusto só na parte difícil.</td></tr>
+      <tr><th scope="row"><code>/effort</code></th><td>Ajusta a profundidade de raciocínio — baixo pra tarefa repetitiva, alto pra debugging complexo ou decisão de arquitetura.</td></tr>
+
+      <tr class="group-row"><th colspan="2" scope="colgroup">Planejamento e qualidade</th></tr>
+      <tr><th scope="row"><code>/plan</code></th><td>Força modo de planejamento antes de tocar em arquivo crítico — pensa antes de editar.</td></tr>
+      <tr><th scope="row"><code>/diff</code></th><td>Abre um visualizador interativo de todas as mudanças da sessão — bom hábito antes de qualquer commit.</td></tr>
+      <tr><th scope="row"><code>/code-review</code></th><td>Revisão de código dedicada, separada da tarefa de construção.</td></tr>
+      <tr><th scope="row"><code>/security-review</code></th><td>Revisão focada em vulnerabilidades — injeção, autenticação, exposição de dado.</td></tr>
+
+      <tr class="group-row"><th colspan="2" scope="colgroup">Paralelismo</th></tr>
+      <tr><th scope="row"><code>/background</code></th><td>Manda uma tarefa demorada (teste, build) rodar em segundo plano, sem travar a sessão.</td></tr>
+
+      <tr class="group-row"><th colspan="2" scope="colgroup">Configuração e manutenção</th></tr>
+      <tr><th scope="row"><code>/init</code></th><td>Cria o CLAUDE.md inicial do projeto — memória persistente entre sessões.</td></tr>
+      <tr><th scope="row"><code>/permissions</code></th><td>Define o que o agente pode fazer sem pedir confirmação.</td></tr>
+      <tr><th scope="row"><code>/memory</code></th><td>Edita a memória salva do projeto diretamente.</td></tr>
+      <tr><th scope="row"><code>/doctor</code></th><td>Diagnostica a saúde da instalação — bom primeiro passo quando algo se comporta estranho.</td></tr>
+      <tr><th scope="row"><code>/checkup</code></th><td>Auditoria completa da configuração: limpa skill/plugin não usado, atualiza a versão, organiza CLAUDE.md volumoso em arquivos menores. Confirma cada mudança antes de aplicar.</td></tr>
+      <tr><th scope="row"><code>/insights</code></th><td>Analisa seu próprio histórico de uso e aponta prompts repetidos que valeriam virar comando ou skill.</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="subhead">Atalhos de teclado (fora do /)</h3>
+  <table class="ref-table">
+    <tbody>
+      <tr><th scope="row">Shift+Tab</th><td>Alterna entre modo normal, auto-aceitar edições, e modo de planejamento.</td></tr>
+      <tr><th scope="row">! (prefixo)</th><td>Roda um comando bash direto, sem o Claude interpretar — mais rápido, gasta menos token. Ex: <code>!git status</code>.</td></tr>
+      <tr><th scope="row">@ (prefixo)</th><td>Autocompleta caminho de arquivo — mais rápido que descrever o arquivo por extenso.</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="subhead">Sequência recomendada numa sessão longa</h3>
+  <div class="codeblock">
+    <span class="label">Checagem de saúde + limpeza antes de continuar</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>/context
+/compact mantenha só o essencial da tarefa atual
+/diff
+/cost</code></pre>
+  </div>
+  <p class="note">Rode <code>/context</code> periodicamente durante sessões longas — um loop autônomo pode consumir contexto e custo mais rápido do que parece, especialmente combinado com <code>/goal</code>.</p>
+</section>
+
+<section class="block" id="fluxo">
+  <div class="block-head"><span class="station-num">05</span><h2>Fluxo completo</h2></div>
+  <p class="block-tag">Do zero ao mantido — juntando plataforma, metodologia, loops e comandos</p>
+  <p class="block-desc">Este é o fio que amarra tudo: cada etapa usa uma aba específica da plataforma e uma combinação específica de skills/comandos.</p>
+
+  <div class="flow-step">
+    <span class="flow-num">1</span>
+    <div class="flow-body">
+      <h4>Ideia</h4>
+      <p>Descreva o que quer construir em linguagem natural, sem estrutura técnica. A entrevista de esclarecimento acontece sozinha.</p>
+      <div class="flow-tools"><span>Home</span><span>superpowers:brainstorming</span></div>
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <span class="flow-num">2</span>
+    <div class="flow-body">
+      <h4>Especificação</h4>
+      <p>Peça o plano formal com critério de sucesso verificável. Ainda em Home — o compromisso de arquivo só vem na próxima etapa.</p>
+      <div class="flow-tools"><span>Home</span><span>superpowers:writing-plans</span></div>
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <span class="flow-num">3</span>
+    <div class="flow-body">
+      <h4>Construção</h4>
+      <p>Migre pra Code, cole o plano, deixe construir com TDD (com gate de verificação real antes de qualquer coisa virar "pronta"). Se o critério estiver bem definido, solte em loop autônomo. Rode <code>/context</code> e <code>/compact</code> periodicamente. Use Impeccable pra interface visual, Caveman se quiser respostas mais compactas nessa fase.</p>
+      <div class="flow-tools"><span>Code</span><span>/goal</span><span>/compact</span><span>test-driven-development</span><span>verification-before-completion</span><span>impeccable</span><span>caveman</span></div>
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <span class="flow-num">4</span>
+    <div class="flow-body">
+      <h4>Publicação</h4>
+      <p>Peça revisão do próprio trabalho antes de fechar a branch. Revise tudo com <code>/diff</code>. Ferramenta simples/visual vira Artifact publicado direto do Home. Aplicação real sobe em domínio externo (GitHub Pages, Netlify, Cloudflare Pages).</p>
+      <div class="flow-tools"><span>requesting-code-review</span><span>finishing-a-development-branch</span><span>/diff</span><span>Artifacts</span><span>deploy externo</span></div>
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <span class="flow-num">5</span>
+    <div class="flow-body">
+      <h4>Manutenção</h4>
+      <p>Rotina recorrente vai pra Scheduled (roda mesmo com o PC desligado). Ajuste pontual do celular usa Dispatch (precisa do PC ligado). claude-mem mantém o contexto do projeto vivo entre sessões. Task Observer acumula padrão pra virar skill nova.</p>
+      <div class="flow-tools"><span>Scheduled</span><span>Dispatch</span><span>claude-mem</span><span>task-observer</span></div>
+    </div>
+  </div>
+
+  <p class="note"><strong>Por cima de tudo:</strong> configure o Customize uma vez com seu tom preferido — vale em qualquer etapa, sem repetir instrução em cada conversa.</p>
+</section>
+
+<section class="block" id="skills">
+<div class="block-head"><span class="station-num">06</span><h2>Skills</h2></div>
+  <p class="block-tag">Instalação e uso completos</p>
+  <p class="block-desc">Sete skills cobrindo design, rigor técnico, descoberta, memória, compressão de tokens e escrita. Cada uma resolve um problema específico — nenhuma se sobrepõe de forma redundante às outras.</p>
+  <p class="note"><strong>Escopo:</strong> as skills abaixo são do Claude Code, instaladas por linha de comando. É um sistema separado do Customize &gt; Skills do chat/Cowork (esse último vem só com <code>skill-creator</code> por padrão, e se instala pela interface, não pelo terminal). Veja a <a class="xref" href="#plataforma">seção 01</a> pra entender a diferença. Todo comando que começa com <code>/</code> (como <code>/plugin</code> ou <code>/impeccable init</code>) é digitado dentro de uma sessão aberta do Claude Code — não no chat do navegador nem direto no PowerShell.</p>
+<div id="skill-impeccable" class="skill-entry">
+    <h3 class="skill-subhead">Impeccable</h3>
+    <p class="block-tag tag-flush">Design de interface · por projeto</p>
+    <p class="block-desc">Skill de design front-end que evita a estética genérica de IA (gradientes roxo-azul, cards dentro de cards, mesma fonte de sempre). Exige contexto de marca antes de gerar qualquer interface e usa paletas de cor e escalas tipográficas avançadas.</p><h4 class="subhead">Instalar</h4><ol class="steps"><li>Instala uma vez, de forma global — vale para todos os projetos.</li><li>Rode o comando no PowerShell.</li><li>Depois, dentro de cada projeto visual, rode /impeccable init uma única vez para definir o contexto de marca daquele projeto.</li></ol><div class="codeblock">
+    <span class="label">PowerShell</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>npx impeccable install</code></pre>
+  </div><div class="codeblock">
+    <span class="label">Dentro do Claude Code, na pasta do projeto</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>/impeccable init</code></pre>
+  </div><h4 class="subhead">Usar</h4><p class="block-desc mb-14">A skill entra sozinha quando você pede algo visual. Exemplos de prompts:</p><div class="codeblock">
+    <span class="label">Prompt — tela nova</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>cria a tela de [nome da tela], estilo [referência visual]</code></pre>
+  </div><div class="codeblock">
+    <span class="label">Prompt — dashboard</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>redesenha o dashboard do [projeto], deixando mais profissional</code></pre>
+  </div><h4 class="subhead">Referência completa — 23 comandos</h4><p class="block-desc mb-18">Todo comando funciona como <code>/impeccable &lt;comando&gt;</code> ou, se você fixar com <code>/impeccable pin &lt;comando&gt;</code>, vira um atalho direto tipo <code>/audit</code>.</p><table class="cmd-table"><tbody><tr class="group-row"><th colspan="2" scope="colgroup">Construção — antes de existir código</th></tr><tr><th scope="row"><code>shape</code></th><td>Planeja UX/UI antes de escrever qualquer código</td></tr><tr><th scope="row"><code>craft</code></th><td>Fluxo completo: planeja, itera visualmente, constrói — o mais indicado pra começar algo do zero</td></tr><tr><th scope="row"><code>teach</code></th><td>Configuração única: reúne contexto de design e escreve PRODUCT.md / DESIGN.md (equivalente ao init)</td></tr><tr class="group-row"><th colspan="2" scope="colgroup">Avaliação — depois de ter algo pronto</th></tr><tr><th scope="row"><code>critique</code></th><td>Revisão de UX: hierarquia, clareza, ressonância emocional</td></tr><tr><th scope="row"><code>audit</code></th><td>Checagem técnica: acessibilidade, performance, responsividade</td></tr><tr><th scope="row"><code>polish</code></th><td>Passe final de acabamento e prontidão pra entrega</td></tr><tr class="group-row"><th colspan="2" scope="colgroup">Ajuste de tom — volume errado</th></tr><tr><th scope="row"><code>bolder</code></th><td>Intensifica design apagado ou sem graça</td></tr><tr><th scope="row"><code>quieter</code></th><td>Acalma design carregado ou exagerado</td></tr><tr><th scope="row"><code>distill</code></th><td>Remove complexidade visual, vai pro essencial</td></tr><tr class="group-row"><th colspan="2" scope="colgroup">Refinamento específico — mira um problema pontual</th></tr><tr><th scope="row"><code>typeset</code></th><td>Corrige fonte, hierarquia e tamanhos de texto</td></tr><tr><th scope="row"><code>colorize</code></th><td>Introduz cor de forma estratégica</td></tr><tr><th scope="row"><code>layout</code></th><td>Corrige espaçamento e ritmo visual</td></tr><tr><th scope="row"><code>animate</code></th><td>Adiciona movimento com propósito, não decorativo</td></tr><tr><th scope="row"><code>delight</code></th><td>Adiciona pequenos momentos de encantamento</td></tr><tr><th scope="row"><code>overdrive</code></th><td>Efeitos visuais tecnicamente extraordinários (beta)</td></tr><tr><th scope="row"><code>clarify</code></th><td>Melhora texto de interface que está confuso</td></tr><tr class="group-row"><th colspan="2" scope="colgroup">Robustez — produção de verdade</th></tr><tr><th scope="row"><code>harden</code></th><td>Trata erros, textos que estouram, casos extremos, i18n</td></tr><tr><th scope="row"><code>onboard</code></th><td>Cuida de fluxos de primeiro uso, telas vazias, ativação</td></tr><tr><th scope="row"><code>optimize</code></th><td>Otimiza performance e carregamento</td></tr><tr><th scope="row"><code>adapt</code></th><td>Adapta o design pra outro contexto/plataforma</td></tr><tr class="group-row"><th colspan="2" scope="colgroup">Sistema de design — reaproveitar entre projetos</th></tr><tr><th scope="row"><code>document</code></th><td>Gera um DESIGN.md a partir do código existente</td></tr><tr><th scope="row"><code>extract</code></th><td>Puxa componentes e tokens reutilizáveis pro design system</td></tr><tr><th scope="row"><code>live</code></th><td>Modo de iteração ao vivo direto no navegador</td></tr></tbody></table><h4 class="subhead">Combo recomendado</h4><div class="codeblock">
+    <span class="label">Prompt — sequência completa</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>/impeccable shape
+[depois de aprovar o plano, peça pra construir]
+/impeccable harden
+/impeccable audit
+/impeccable critique
+/impeccable polish</code></pre>
+  </div><p class="note"><strong>Nota:</strong> Repita o /impeccable init em cada projeto novo — o contexto de marca é salvo por projeto, não globalmente.</p><p class="source-link"><a href="https://github.com/pbakaus/impeccable" target="_blank" rel="noopener noreferrer">↗ pbakaus/impeccable no GitHub</a></p></div>
+<div id="skill-superpowers" class="skill-entry">
+    <h3 class="skill-subhead">Superpowers</h3>
+    <p class="block-tag tag-flush">Metodologia de engenharia · global</p>
+    <p class="block-desc">Framework completo de disciplina de desenvolvimento: antes de codar, esclarece requisitos, monta um plano de implementação e força TDD real (teste que falha → código mínimo → teste passa → refatora). Instala 13 sub-skills de uma vez.</p><h4 class="subhead">Instalar</h4><ol class="steps"><li>Abra o Claude Code (claude) em qualquer pasta.</li><li>Rode o comando de adicionar o marketplace — espere confirmar antes do próximo passo.</li><li>Rode o comando de instalação do plugin.</li><li>Feche e reabra o Claude Code para ativar.</li></ol><div class="codeblock">
+    <span class="label">Dentro do Claude Code — passo 1</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>/plugin marketplace add obra/superpowers-marketplace</code></pre>
+  </div><div class="codeblock">
+    <span class="label">Dentro do Claude Code — passo 2</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>/plugin install superpowers@superpowers-marketplace --global</code></pre>
+  </div><h4 class="subhead">Usar</h4><p class="block-desc mb-14">Não precisa chamar por comando — entra sozinha quando você pede para construir algo. Exemplo de prompt:</p><div class="codeblock">
+    <span class="label">Prompt — tarefa técnica com rigor</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>implementa a função de [tarefa técnica], com validação de [critério de qualidade]</code></pre>
+  </div><div class="codeblock">
+    <span class="label">Prompt — pular a etapa de perguntas</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>sem brainstorm, só implementa direto: [descreva a tarefa aqui]</code></pre>
+  </div><div class="codeblock">
+    <span class="label">Verificar instalação</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>/skills</code></pre>
+  </div><p class="source-link"><a href="https://github.com/obra/superpowers-marketplace" target="_blank" rel="noopener noreferrer">↗ obra/superpowers-marketplace no GitHub</a></p></div>
+<div id="skill-find-skills" class="skill-entry">
+    <h3 class="skill-subhead">find-skills</h3>
+    <p class="block-tag tag-flush">Buscador de skills · global</p>
+    <p class="block-desc">Busca skills de terceiros num catálogo de dezenas de milhares, direto pelo terminal, em linguagem natural — sem precisar abrir o navegador para procurar no GitHub.</p><h4 class="subhead">Instalar</h4><ol class="steps"><li>Rode fora do Claude Code, direto no PowerShell.</li></ol><div class="codeblock">
+    <span class="label">PowerShell</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>npx skills add vercel-labs/skills --skill find-skills</code></pre>
+  </div><h4 class="subhead">Usar</h4><p class="block-desc mb-14">Dentro de uma sessão do Claude Code, peça em linguagem natural:</p><div class="codeblock">
+    <span class="label">Prompt — buscar por tecnologia</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>acha uma skill pra trabalhar com [tecnologia ou formato de arquivo]</code></pre>
+  </div><div class="codeblock">
+    <span class="label">Prompt — buscar por objetivo</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>procura uma skill de [objetivo]</code></pre>
+  </div><p class="note"><strong>Nota:</strong> Skills de terceiros rodam com permissões amplas do agente. Revise o que a skill faz antes de instalar qualquer sugestão, especialmente de fontes menos conhecidas.</p><p class="source-link"><a href="https://github.com/vercel-labs/skills" target="_blank" rel="noopener noreferrer">↗ vercel-labs/skills no GitHub</a></p></div>
+<div id="skill-task-observer" class="skill-entry">
+    <h3 class="skill-subhead">Task Observer</h3>
+    <p class="block-tag tag-flush">Meta-skill · observação · ativar depois</p>
+    <p class="block-desc">Fica observando suas sessões de trabalho e anota padrões — correções que você faz, fluxos repetidos, técnicas que funcionaram bem — para depois virarem novas skills ou melhorias nas que você já tem.</p><div class="note"><strong>Status:</strong> pode ficar instalada sem ativar — a recomendação é ligar quando você já tiver 3–4 skills próprias rodando.</div><h4 class="subhead">Instalar</h4><div class="codeblock">
+    <span class="label">PowerShell</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>mkdir .claude\skills\task-observer
+Invoke-WebRequest -Uri "https://claudskills.com/skills/task-observer/SKILL.md" -OutFile ".claude\skills\task-observer\SKILL.md"</code></pre>
+  </div><h4 class="subhead">Usar</h4><p class="block-desc mb-14">Ative quando chegar a hora: adicione a linha abaixo no CLAUDE.md do projeto onde quer que ela observe.</p><div class="codeblock">
+    <span class="label">Linha para o CLAUDE.md</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>No início de qualquer sessão orientada a tarefas, ative a skill task-observer para registrar oportunidades de criação/melhoria de skills.</code></pre>
+  </div><p class="source-link"><a href="https://claudskills.com/skills/task-observer" target="_blank" rel="noopener noreferrer">↗ claudskills.com — task-observer</a></p></div>
+<div id="skill-caveman" class="skill-entry">
+    <h3 class="skill-subhead">Caveman</h3>
+    <p class="block-tag tag-flush">Compressão de tokens · global</p>
+    <p class="block-desc">Faz o Claude responder em modo compacto — frases curtas, sem preâmbulo, sem cortesias — reduzindo em média 65% dos tokens de saída, preservando código, comandos e termos técnicos exatos.</p><h4 class="subhead">Instalar</h4><ol class="steps"><li>Instala como plugin, de forma global.</li><li>Rode os dois comandos dentro do Claude Code, um de cada vez.</li></ol><div class="codeblock">
+    <span class="label">Dentro do Claude Code — passo 1</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>/plugin marketplace add JuliusBrussee/caveman</code></pre>
+  </div><div class="codeblock">
+    <span class="label">Dentro do Claude Code — passo 2</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>/plugin install caveman@caveman</code></pre>
+  </div><h4 class="subhead">Usar</h4><p class="block-desc mb-14">Ative e desative por comando, ou ajuste o nível de intensidade (6 níveis, de lite a ultra).</p><div class="codeblock">
+    <span class="label">Ativar</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>/caveman</code></pre>
+  </div><div class="codeblock">
+    <span class="label">Desativar</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>normal mode</code></pre>
+  </div><div class="codeblock">
+    <span class="label">Ver economia de tokens</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>/caveman-stats</code></pre>
+  </div><div class="codeblock">
+    <span class="label">Ajustar intensidade</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>/caveman &lt;nivel&gt;</code></pre>
+  </div><p class="note"><strong>Nota:</strong> Só reduz tokens de saída, não de entrada — em fluxos já curtos pode não compensar. Sai do modo automaticamente em avisos de segurança ou ações irreversíveis, retomando o modo compacto depois.</p><p class="source-link"><a href="https://github.com/JuliusBrussee/caveman" target="_blank" rel="noopener noreferrer">↗ JuliusBrussee/caveman no GitHub</a></p></div>
+<div id="skill-claude-mem" class="skill-entry">
+    <h3 class="skill-subhead">claude-mem</h3>
+    <p class="block-tag tag-flush">Memória persistente · global</p>
+    <p class="block-desc">Dá memória entre sessões do Claude Code: captura o que foi feito, comprime com IA, e injeta o contexto relevante na sessão seguinte — sem precisar reexplicar o projeto do zero.</p><h4 class="subhead">Instalar</h4><div class="codeblock">
+    <span class="label">PowerShell</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>npx claude-mem install</code></pre>
+  </div><h4 class="subhead">Usar</h4><p class="block-desc mb-14">Funciona sozinha em segundo plano a partir da instalação — não exige comando no dia a dia.</p><div class="codeblock">
+    <span class="label">Prompt — consultar sessões antigas</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>já discutimos [assunto] nesse projeto antes?</code></pre>
+  </div><p class="note"><strong>Nota:</strong> A API HTTP local (porta 37777) não tem autenticação — qualquer processo na máquina pode ler as observações salvas. Risco baixo em máquina pessoal de uso individual; evite em máquina compartilhada.</p><p class="source-link"><a href="https://github.com/thedotmack/claude-mem" target="_blank" rel="noopener noreferrer">↗ thedotmack/claude-mem no GitHub</a></p></div>
+<div id="skill-humanizer" class="skill-entry">
+    <h3 class="skill-subhead">Humanizer</h3>
+    <p class="block-tag tag-flush">Escrita e documentação · global</p>
+    <p class="block-desc">Remove sinais de escrita gerada por IA em textos — travessão em excesso, vocabulário genérico, listas repetitivas de três itens, fechamentos de chatbot — reescrevendo no tom da pessoa, com base num catálogo de 33 padrões.</p><h4 class="subhead">Instalar</h4><ol class="steps"><li>Opção mais simples: instala como skill.</li><li>Alternativa: instala como plugin, o que dá um comando de slash dedicado.</li></ol><div class="codeblock">
+    <span class="label">PowerShell — opção skill</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>npx skills add blader/humanizer --agent claude-code</code></pre>
+  </div><div class="codeblock">
+    <span class="label">Dentro do Claude Code — opção plugin, passo 1</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>/plugin marketplace add blader/humanizer</code></pre>
+  </div><div class="codeblock">
+    <span class="label">Dentro do Claude Code — opção plugin, passo 2</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>/plugin install humanizer@humanizer</code></pre>
+  </div><h4 class="subhead">Usar</h4><p class="block-desc mb-14">Cole o texto gerado pela IA e, se quiser, uma amostra da própria escrita pra referência de tom.</p><div class="codeblock">
+    <span class="label">Prompt — humanizar texto</span>
+    <button class="copy-btn" data-copy>Copiar</button>
+    <pre><code>/humanizer
+Aqui está uma amostra da minha escrita pra referência de tom:
+[cole 2-3 parágrafos seus]
+
+Agora humaniza esse texto:
+[cole o texto gerado pela IA aqui]</code></pre>
+  </div><p class="note"><strong>Nota:</strong> Focada em texto (documentos, e-mails, relatórios), não em código — não se aplica a scripts ou tarefas técnicas funcionais.</p><p class="source-link"><a href="https://github.com/blader/humanizer" target="_blank" rel="noopener noreferrer">↗ blader/humanizer no GitHub</a></p></div>
+</section>
+
+<section class="block" id="watchlist">
+<div class="block-head"><span class="station-num">07</span><h2>Lista de observação</h2></div>
+    <p class="block-tag">Avaliadas · não instaladas agora</p>
+    <p class="block-desc">Ferramentas analisadas que fazem sentido apenas em cenários específicos de escala — não valem a pena no volume de trabalho de um desenvolvedor solo com poucos projetos por vez. Ficam registradas aqui com o gatilho que justificaria reconsiderar cada uma.</p>
+
+    <h3 class="subhead">Ruflo (antigo Claude Flow)</h3>
+    <p class="block-desc mb-10">Plataforma de orquestração multiagente ("hive-mind") construída sobre o Claude Code — coordena múltiplos agentes especializados em paralelo (pesquisador, tester, reviewer etc.) com memória compartilhada entre eles.</p>
+    <p class="note"><strong>Por que não agora:</strong> configurações multiagente ingênuas costumam gastar mais tokens do que uma sessão única bem estruturada, porque cada agente paga overhead de contexto próprio. Pensada para times enterprise, não builds sequenciais de um projeto por vez.</p>
+    <p class="note"><strong>Reconsiderar quando:</strong> houver várias frentes de trabalho genuinamente paralelas e interdependentes rodando ao mesmo tempo — não apenas vários projetos separados.</p>
+    <p class="source-link"><a href="https://github.com/ruvnet/claude-flow" target="_blank" rel="noopener noreferrer">↗ ruvnet/claude-flow no GitHub</a></p>
+
+    <h3 class="subhead mt-36">Graphify</h3>
+    <p class="block-desc mb-10">Constrói um grafo de conhecimento do código antes do Claude tocar em qualquer arquivo — mapeia importações, chamadas de função e módulos centrais.</p>
+    <p class="note"><strong>Por que não agora:</strong> em repositórios com menos de 30 arquivos, o custo de construir o grafo supera a economia de tokens. Desenhada para codebases grandes (500+ arquivos), com dependência de mantenedor único.</p>
+    <p class="note"><strong>Reconsiderar quando:</strong> algum projeto crescer significativamente em volume de arquivos e módulos interligados.</p>
+    <p class="source-link"><a href="https://github.com/Graphify-Labs/graphify" target="_blank" rel="noopener noreferrer">↗ Graphify-Labs/graphify no GitHub</a></p>
+</section>
+
+<section class="block" id="seguranca">
+  <div class="block-head"><span class="station-num">08</span><h2>Segurança — checklist consolidado</h2></div>
+  <p class="block-tag">Os riscos reais espalhados por esta apostila, num só lugar</p>
+
+  <ul class="check-list">
+    <li><span class="check-mark" aria-hidden="true">!</span><div class="check-body"><strong>Loop via terminal</strong><p><code>--dangerously-skip-permissions</code> dá acesso irrestrito de shell — só usar dentro de ambiente de contêiner confiável, nunca na pasta principal. Detalhe na <a class="xref" href="#loops">seção 03</a>.</p></div></li>
+    <li><span class="check-mark" aria-hidden="true">!</span><div class="check-body"><strong>claude-mem</strong><p>API HTTP local sem autenticação (porta 37777) — qualquer processo na máquina pode ler as observações. Risco baixo em uso pessoal, evitar em máquina compartilhada.</p></div></li>
+    <li><span class="check-mark" aria-hidden="true">!</span><div class="check-body"><strong>Dispatch + Computer Use</strong><p>Claude pode operar aplicativos abertos de verdade — começar sempre em modo leitura (buscar, resumir, comparar) e exigir aprovação antes de qualquer ação que envie, apague ou modifique algo importante.</p></div></li>
+    <li><span class="check-mark" aria-hidden="true">!</span><div class="check-body"><strong>Skills de terceiros</strong><p>Rodam com permissões amplas do agente. Revisar o que a skill faz antes de instalar, especialmente de fontes menos conhecidas.</p></div></li>
+    <li><span class="check-mark" aria-hidden="true">!</span><div class="check-body"><strong>Loop sem gate de teste</strong><p>Sem verificação automática, o agente pode marcar tarefa como "pronta" quando só parece pronta. Critério de sucesso sempre verificável, nunca subjetivo.</p></div></li>
+    <li><span class="check-mark" aria-hidden="true">!</span><div class="check-body"><strong>Artifacts publicados</strong><p>Um artifact clássico (Home) publicado fica acessível a qualquer pessoa com o link, sem login — nunca publique algo com dado sensível de cliente ou empresa. O artifact do Claude Code já nasce privado, mas confirme antes de assumir isso.</p></div></li>
+  </ul>
+</section>
+
+<section class="block" id="glossario">
+  <div class="block-head"><span class="station-num">09</span><h2>Glossário</h2></div>
+  <p class="block-tag">Termos usados ao longo da apostila</p>
+  <dl class="glossary">
+    <dt>API</dt>
+    <dd>Interface que permite um programa "conversar" com outro. "Chamar uma API" é pedir dado ou ação a um serviço externo.</dd>
+    <dt>Artifact</dt>
+    <dd>Conteúdo autocontido (documento, app, diagrama) que o Claude gera num painel separado da conversa, pronto pra visualizar, editar e publicar. Existem duas versões com regras diferentes: a clássica (Home, pública ao publicar) e a do Claude Code (privada por padrão).</dd>
+    <dt>CLAUDE.md</dt>
+    <dd>Arquivo de instrução e memória que o Claude Code lê automaticamente no início de cada sessão, dentro de um projeto.</dd>
+    <dt>Computer Use</dt>
+    <dd>Capacidade do Claude de operar aplicativos abertos no computador como faria uma pessoa — clicar, digitar, navegar entre telas.</dd>
+    <dt>Conector (MCP)</dt>
+    <dd>Ligação configurada entre o Claude e um serviço externo (e-mail, calendário, planilha na nuvem etc.) através do protocolo MCP, dando acesso a dados e ações daquele serviço dentro da conversa.</dd>
+    <dt>Cowork</dt>
+    <dd>Modo do Claude que executa tarefas de conhecimento (pesquisa, documento, planilha) em segundo plano, entregando o resultado pronto.</dd>
+    <dt>Deploy</dt>
+    <dd>Colocar uma aplicação no ar, acessível por link ou domínio próprio, fora do ambiente de desenvolvimento.</dd>
+    <dt>Effort</dt>
+    <dd>Nível de profundidade de raciocínio aplicado numa tarefa. Baixo economiza tempo e custo em tarefas simples; alto vale a pena em decisões complexas ou debugging difícil.</dd>
+    <dt>Fork (de sessão)</dt>
+    <dd>Ramificação separada de uma conversa/sessão, usada pra testar algo arriscado sem comprometer a principal.</dd>
+    <dt>Gate de verificação</dt>
+    <dd>Condição objetiva (teste passando, comando sem erro) que precisa ser confirmada antes de uma tarefa ser considerada completa. No Superpowers, é a sub-skill <code>verification-before-completion</code> que aplica essa checagem.</dd>
+    <dt>Grafo de conhecimento (de código)</dt>
+    <dd>Mapa das relações entre arquivos e funções de um projeto, usado pra navegação mais eficiente em vez de busca arquivo por arquivo.</dd>
+    <dt>Hive-mind</dt>
+    <dd>Arquitetura em que múltiplos agentes de IA são coordenados como uma colônia, com papéis diferentes — planejador, executor, revisor.</dd>
+    <dt>Janela de contexto</dt>
+    <dd>Quantidade de conversa/código que o modelo consegue "ver" de uma vez. Enche com o tempo e degrada a qualidade da resposta perto do limite.</dd>
+    <dt>Loop / arquitetura de loop</dt>
+    <dd>Técnica de deixar o Claude iterar sozinho até um critério de sucesso ser verificado, sem você acompanhar prompt a prompt.</dd>
+    <dt>MCP (Model Context Protocol)</dt>
+    <dd>Protocolo aberto que permite ao Claude se conectar a ferramentas e serviços externos de forma padronizada — é o que torna um conector possível.</dd>
+    <dt>npm / npx</dt>
+    <dd>Gerenciador de pacotes do Node.js. npx roda um pacote uma única vez, sem instalar permanentemente — é o comando mais comum pra instalar skill nova.</dd>
+    <dt>Plugin / Marketplace</dt>
+    <dd>Um plugin empacota várias skills/comandos juntos; o marketplace é o repositório de onde ele é instalado.</dd>
+    <dt>Prompt</dt>
+    <dd>A instrução ou pedido que você escreve pro Claude — desde uma pergunta simples até um plano detalhado de várias linhas.</dd>
+    <dt>Sandbox / contêiner isolado</dt>
+    <dd>Ambiente separado do seu sistema principal (Docker, devcontainer) onde uma ação arriscada não afeta seus arquivos reais.</dd>
+    <dt>Skill</dt>
+    <dd>Pacote de instrução/comportamento reutilizável que o Claude carrega — pode ser da comunidade ou criado por você.</dd>
+    <dt>Style</dt>
+    <dd>Predefinição de tom aplicada a uma conversa específica (formal, conciso, didático etc.), sem alterar as instruções permanentes de perfil ou de projeto.</dd>
+    <dt>Subagente</dt>
+    <dd>Sessão auxiliar que o Claude Code invoca pra uma tarefa específica, mantendo a conversa principal limpa.</dd>
+    <dt>TDD (Test-Driven Development)</dt>
+    <dd>Escrever o teste antes do código: teste falha → código mínimo pra passar → refatora. Garante que "pronto" seja verificável, não uma impressão.</dd>
+    <dt>Token</dt>
+    <dd>Unidade de texto que o modelo processa, aproximadamente um pedaço de palavra. Custo e limite de contexto são medidos em tokens.</dd>
+    <dt>Worktree</dt>
+    <dd>Cópia de trabalho paralela de um mesmo repositório git, usada pra rodar múltiplos agentes ou tarefas ao mesmo tempo sem que um interfira no outro. No Superpowers, é a sub-skill <code>using-git-worktrees</code> que gerencia isso.</dd>
+    <dt>Zona burra</dt>
+    <dd>Apelido da comunidade pro ponto em que a janela de contexto está tão cheia que a qualidade da resposta cai visivelmente.</dd>
+  </dl>
+</section>
+
+<section class="block" id="comecar">
+  <div class="block-head"><span class="station-num">10</span><h2>Por onde começar</h2></div>
+  <p class="block-tag">Três passos práticos pra sair da leitura e entrar na prática</p>
+  <p class="block-desc">Toda a apostila cabe nesta sequência inicial. Reserve uma hora e siga na ordem — cada passo aponta de volta pro capítulo que o detalha.</p>
+
+  <div class="flow-step">
+    <span class="flow-num">1</span>
+    <div class="flow-body">
+      <h4>Instale a base</h4>
+      <p>Superpowers (metodologia) e Impeccable (design) cobrem a maior parte do ganho. Comandos prontos pra copiar na <a class="xref" href="#skills">seção 06</a>.</p>
+      <div class="flow-tools"><span>superpowers</span><span>impeccable</span></div>
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <span class="flow-num">2</span>
+    <div class="flow-body">
+      <h4>Rode um fluxo completo de ponta a ponta</h4>
+      <p>Pegue uma ideia pequena e atravesse as 5 etapas do <a class="xref" href="#fluxo">fluxo completo (seção 05)</a>: ideia em Home, plano aprovado, construção em Code com TDD, revisão, publicação. Uma passada inteira ensina mais que reler qualquer capítulo.</p>
+      <div class="flow-tools"><span>Home</span><span>Code</span><span>/goal</span></div>
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <span class="flow-num">3</span>
+    <div class="flow-body">
+      <h4>Automatize uma rotina e revise a segurança</h4>
+      <p>Escolha uma tarefa recorrente e mande pra Scheduled (<a class="xref" href="#plataforma">seção 01</a>). Antes de soltar qualquer loop autônomo, passe pelo <a class="xref" href="#seguranca">checklist de segurança (seção 08)</a>.</p>
+      <div class="flow-tools"><span>Scheduled</span><span>checklist 08</span></div>
+    </div>
+  </div>
+
+  <p class="note"><strong>Regra de ouro:</strong> não tente adotar tudo de uma vez. Um fluxo completo bem-feito por semana consolida mais que sete skills instaladas e nunca usadas.</p>
+</section>
+
+<a href="#sumario" class="back-top" id="backTop" aria-label="Voltar ao sumário">↑ Sumário</a>
+
+<footer>
+  <p># apostila-claude · plataforma + metodologia + loops + comandos + skills · atualizado em julho de 2026</p>
+</footer>
+
+<script>
+document.querySelectorAll(".copy-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const codeEl = btn.parentElement.querySelector("pre code");
+    navigator.clipboard.writeText(codeEl.innerText).then(() => {
+      btn.textContent = "Copiado!";
+      btn.classList.add("copied");
+      setTimeout(() => {
+        btn.textContent = "Copiar";
+        btn.classList.remove("copied");
+      }, 1600);
+    }).catch(() => {
+      const range = document.createRange();
+      range.selectNodeContents(codeEl);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      btn.textContent = "Selecione e copie";
+      setTimeout(() => { btn.textContent = "Copiar"; }, 2600);
+    });
+  });
+});
+
+document.querySelectorAll(".sumario-chev").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const sublist = document.getElementById(btn.getAttribute("data-target"));
+    const isOpen = sublist.classList.toggle("open");
+    btn.classList.toggle("open", isOpen);
+    btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  });
+});
+
+const backTop = document.getElementById("backTop");
+const onScroll = () => backTop.classList.toggle("visible", window.scrollY > 900);
+window.addEventListener("scroll", onScroll, { passive: true });
+onScroll();
+</script>
+
+</body>
+</html>
