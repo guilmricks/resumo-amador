@@ -474,8 +474,8 @@
       <tr><th scope="row"><code>/init</code></th><td>Cria o CLAUDE.md inicial do projeto — memória persistente entre sessões.</td></tr>
       <tr><th scope="row"><code>/permissions</code></th><td>Define o que o agente pode fazer sem pedir confirmação.</td></tr>
       <tr><th scope="row"><code>/memory</code></th><td>Edita a memória salva do projeto diretamente.</td></tr>
-      <tr><th scope="row"><code>/doctor</code></th><td>Diagnostica a saúde da instalação — bom primeiro passo quando algo se comporta estranho.</td></tr>
-      <tr><th scope="row"><code>/checkup</code></th><td>Auditoria completa da configuração: limpa skill/plugin não usado, atualiza a versão, organiza CLAUDE.md volumoso em arquivos menores. Confirma cada mudança antes de aplicar.</td></tr>
+      <tr><th scope="row"><code>/doctor</code></th><td>Auditoria completa, não só diagnóstico rápido: checa instalação duplicada/PATH quebrado, skill/plugin/MCP sem uso, CLAUDE.md inchado, hook lento, versão desatualizada e modo de permissão. Mostra tudo antes, confirma em no máximo duas perguntas, só então aplica — nada muda sem você aprovar.</td></tr>
+      <tr><th scope="row"><code>/checkup</code></th><td>Descrito por algumas fontes com esse mesmo escopo de auditoria; na prática, quem cobriu isso de ponta a ponta foi <code>/doctor</code> (testado neste dossiê). Se <code>/checkup</code> não existir na sua instalação, use <code>/doctor</code>.</td></tr>
       <tr><th scope="row"><code>/insights</code></th><td>Analisa seu próprio histórico de uso e aponta prompts repetidos que valeriam virar comando ou skill.</td></tr>
     </tbody>
   </table>
